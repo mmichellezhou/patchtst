@@ -26,7 +26,7 @@ class ETTDataset(Dataset):
         # load and drop date column
         df = pd.read_csv(data_path)
         df = df.drop(columns=["date"])
-        data = df.values.astype(np.float32)  # (17420, 7)
+        data = df.values.astype(np.float32) # (17420, 7)
 
         # train/val/test split
         n = len(data)
@@ -45,7 +45,7 @@ class ETTDataset(Dataset):
         return len(self.data) - self.seq_len - self.pred_len + 1
 
     def __getitem__(self, idx):
-        x = self.data[idx : idx + self.seq_len]           # (seq_len, 7)
+        x = self.data[idx : idx + self.seq_len]                                 # (seq_len, 7)
         y = self.data[idx + self.seq_len : idx + self.seq_len + self.pred_len]  # (pred_len, 7)
 
         # instance normalization per channel
@@ -53,7 +53,7 @@ class ETTDataset(Dataset):
             mean = x.mean(axis=0, keepdims=True)
             std = x.std(axis=0, keepdims=True) + 1e-8
             x = (x - mean) / std
-            y = (y - mean) / std  # use same mean/std from input window
+            y = (y - mean) / std    # use same mean/std from input window
 
         return torch.tensor(x), torch.tensor(y)
 
@@ -74,5 +74,5 @@ def get_dataloaders(config=config):
 if __name__ == "__main__":
     train_loader, val_loader, test_loader = get_dataloaders()
     x, y = next(iter(train_loader))
-    print(f"x shape: {x.shape}")  # (batch_size, seq_len, 7)
-    print(f"y shape: {y.shape}")  # (batch_size, pred_len, 7)
+    print(f"x shape: {x.shape}")    # (batch_size, seq_len, 7)
+    print(f"y shape: {y.shape}")    # (batch_size, pred_len, 7)
