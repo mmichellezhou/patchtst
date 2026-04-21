@@ -15,20 +15,21 @@ from dataclasses import dataclass, field
 
 @dataclass
 class Config:
-    # Dataset
+    # dataset
     dataset_name: str = "ETTh1"
+    n_channels: int = 7
     target: str = "OT"
     features: str = "M"
     train_ratio: float = 0.7
     val_ratio: float = 0.1
     test_ratio: float = 0.2
 
-    # Patching
+    # patching
     patch_len: int = 16
     stride: int = 8
     seq_len: int = 336
 
-    # Model
+    # model
     d_model: int = 128
     n_heads: int = 16
     n_layers: int = 3
@@ -36,16 +37,16 @@ class Config:
     dropout: float = 0.2
     instance_norm: bool = True
 
-    # Forecasting
+    # forecasting
     pred_len: int = 96
 
-    # Training
+    # training
     batch_size: int = 128
     learning_rate: float = 1e-4
     epochs: int = 100
     seed: int = 2021
 
-    # Paths
+    # paths
     save_path: str = "../results"
     checkpoint_path: str = "../results/checkpoints"
 
