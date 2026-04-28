@@ -10,7 +10,11 @@ Contains:
 - Dataset and experiment settings
 """
 
+import os
 from dataclasses import dataclass, field
+
+_HERE = os.path.dirname(os.path.abspath(__file__))   # .../patchtst/code
+_ROOT = os.path.dirname(_HERE)                        # .../patchtst
 
 
 @dataclass
@@ -46,13 +50,11 @@ class Config:
     epochs: int = 100
     seed: int = 2021
 
-    # paths
-    save_path: str = "../results"
-    checkpoint_path: str = "../results/checkpoints"
-
     def __post_init__(self):
         # auto-derive data path from dataset name
-        self.data_path = f"../data/ETDataset/ETT-small/{self.dataset_name}.csv"
+        self.data_path = os.path.join(_ROOT, "data", "ETDataset", "ETT-small", f"{self.dataset_name}.csv")
+        self.save_path = os.path.join(_ROOT, "results")
+        self.checkpoint_path = os.path.join(_ROOT, "results", "checkpoints")
 
         # smaller model for ETTh1/ETTh2 to avoid overfitting (per Appendix A.1.4)
         if self.dataset_name in ["ETTh1", "ETTh2"]:
