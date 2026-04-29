@@ -15,6 +15,27 @@ import torch.nn as nn
 from config import config
 
 
+class RevIN(nn.Module):
+    """Reversible Instance Normalization (Kim et al., ICLR 2022)."""
+    def __init__(self, n_channels, eps=1e-5):
+        super().__init__()
+        self.eps = eps
+        self.gamma = nn.Parameter(torch.ones(n_channels))
+        self.beta  = nn.Parameter(torch.zeros(n_channels))
+
+    def forward(self, x, mode):
+        # x: (batch, seq_len, n_channels)
+        if mode == 'norm':
+            self.mean = x.mean(dim=1, keepdim=True)
+            self.std  = torch.sqrt(x.var(dim=1, keepdim=True, unbiased=False) + self.eps)
+            x = (x - self.mean) / self.std
+            x = x * self.gamma + self.beta
+        elif mode == 'denorm':
+            x = (x - self.beta) / self.gamma
+            x = x * self.std + self.mean
+        return x
+
+
 class _TSTEncoderLayer(nn.Module):
     """Transformer encoder layer with BatchNorm, matching the paper."""
     def __init__(self, d_model, n_heads, d_ff, dropout):
@@ -61,6 +82,9 @@ class PatchTST(nn.Module):
         # number of input channels (features)
         self.n_channels = config.n_channels
 
+        # reversible instance normalization
+        self.revin = RevIN(self.n_channels)
+
         # patch projection: project each patch to d_model dimensions
         self.patch_projection = nn.Linear(self.patch_len, self.d_model)
 
@@ -81,6 +105,9 @@ class PatchTST(nn.Module):
     def forward(self, x):
         # x: (batch_size, seq_len, n_channels)
         batch_size = x.shape[0]
+
+        # RevIN normalization
+        x = self.revin(x, 'norm')
 
         # channel independence
         # (batch_size, seq_len, n_channels) -> (batch_size * n_channels, seq_len)
@@ -112,6 +139,9 @@ class PatchTST(nn.Module):
         # (batch_size * n_channels, pred_len) -> (batch_size, pred_len, n_channels)
         x = x.reshape(batch_size, self.n_channels, self.pred_len)   # (batch_size, n_channels, pred_len)
         x = x.permute(0, 2, 1)                                      # (batch_size, pred_len, n_channels)
+
+        # RevIN denormalization
+        x = self.revin(x, 'denorm')
 
         return x
 

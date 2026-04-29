@@ -65,14 +65,6 @@ class ETTDataset(Dataset):
     def __getitem__(self, idx):
         x = self.data[idx : idx + self.seq_len]                                 # (seq_len, 7)
         y = self.data[idx + self.seq_len : idx + self.seq_len + self.pred_len]  # (pred_len, 7)
-
-        # instance normalization per channel
-        if self.instance_norm:
-            mean = x.mean(axis=0, keepdims=True)
-            std = x.std(axis=0, keepdims=True) + 1e-8
-            x = (x - mean) / std
-            y = (y - mean) / std    # use same mean/std from input window
-
         return torch.tensor(x), torch.tensor(y)
 
 
