@@ -15,6 +15,32 @@ import torch.nn as nn
 from config import config
 
 
+class _TSTEncoderLayer(nn.Module):
+    """Transformer encoder layer with BatchNorm, matching the paper."""
+    def __init__(self, d_model, n_heads, d_ff, dropout):
+        super().__init__()
+        self.attn = nn.MultiheadAttention(d_model, n_heads, dropout=dropout, batch_first=True)
+        self.ff = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(d_ff, d_model),
+        )
+        self.norm1 = nn.BatchNorm1d(d_model)
+        self.norm2 = nn.BatchNorm1d(d_model)
+        self.drop = nn.Dropout(dropout)
+
+    def forward(self, x):
+        # x: (B, L, D)
+        attn_out, _ = self.attn(x, x, x)
+        x = x + self.drop(attn_out)
+        B, L, D = x.shape
+        x = self.norm1(x.reshape(B * L, D)).reshape(B, L, D)
+        x = x + self.drop(self.ff(x))
+        x = self.norm2(x.reshape(B * L, D)).reshape(B, L, D)
+        return x
+
+
 class PatchTST(nn.Module):
     def __init__(self, config=config):
         super().__init__()
@@ -41,19 +67,11 @@ class PatchTST(nn.Module):
         # positional encoding
         self.pos_encoding = nn.Parameter(torch.randn(self.n_patches, self.d_model))
 
-        # transformer encoder
-        encoder_layer = nn.TransformerEncoderLayer(
-            d_model=self.d_model,
-            nhead=self.n_heads,
-            dim_feedforward=self.d_ff,
-            dropout=self.dropout,
-            batch_first=True,
-            norm_first=False    # BatchNorm is used in paper, not LayerNorm
-        )
-        self.transformer_encoder = nn.TransformerEncoder(
-            encoder_layer,
-            num_layers=self.n_layers
-        )
+        # transformer encoder with BatchNorm (per paper)
+        self.transformer_encoder = nn.ModuleList([
+            _TSTEncoderLayer(self.d_model, self.n_heads, self.d_ff, self.dropout)
+            for _ in range(self.n_layers)
+        ])
 
         # prediction head: flatten patches and project to pred_len
         self.prediction_head = nn.Linear(self.n_patches * self.d_model, self.pred_len)
@@ -81,7 +99,8 @@ class PatchTST(nn.Module):
 
         # transformer encoder
         # (batch_size * n_channels, n_patches, d_model) -> (batch_size * n_channels, n_patches, d_model)
-        x = self.transformer_encoder(x)
+        for layer in self.transformer_encoder:
+            x = layer(x)
 
         # flatten + prediction head
         # (batch_size * n_channels, n_patches, d_model) -> (batch_size * n_channels, n_patches * d_model)
