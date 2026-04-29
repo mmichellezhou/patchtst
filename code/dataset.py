@@ -29,7 +29,6 @@ class ETTDataset(Dataset):
     def __init__(self, data_path, split="train", config=config):
         self.seq_len = config.seq_len
         self.pred_len = config.pred_len
-        self.instance_norm = config.instance_norm
 
         # load and drop date column
         df = pd.read_csv(data_path)
@@ -54,6 +53,12 @@ class ETTDataset(Dataset):
                 "val":   (train_end, val_end),
                 "test":  (val_end, n),
             }
+
+        # global normalization using training set statistics (no data leakage)
+        train_start, train_end = borders["train"]
+        mean = data[train_start:train_end].mean(axis=0, keepdims=True)
+        std  = data[train_start:train_end].std(axis=0,  keepdims=True) + 1e-8
+        data = (data - mean) / std
 
         start, end = borders[split]
         self.data = data[start:end]
