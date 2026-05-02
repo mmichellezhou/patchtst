@@ -207,8 +207,82 @@ class PatchTSTCrossChannel(nn.Module):
         return x
 
 
+class PatchTSTMultiScale(nn.Module):
+    """PatchTST with multiple patch scales fused in parallel."""
+
+    def __init__(self, config=config):
+        super().__init__()
+
+        self.seq_len = config.seq_len
+        self.pred_len = config.pred_len
+        self.stride = config.stride
+        self.d_model = config.d_model
+        self.n_heads = config.n_heads
+        self.n_layers = config.n_layers
+        self.d_ff = config.d_ff
+        self.dropout = config.dropout
+        self.n_channels = config.n_channels
+        self.patch_scales = config.patch_scales
+
+        self.n_patches = [
+            (self.seq_len - p) // self.stride + 1
+            for p in self.patch_scales
+        ]
+        self.total_patch_tokens = sum(n * self.d_model for n in self.n_patches)
+
+        self.revin = RevIN(self.n_channels)
+        self.patch_projections = nn.ModuleList([
+            nn.Linear(scale, self.d_model)
+            for scale in self.patch_scales
+        ])
+        self.patch_pos_encodings = nn.ParameterList([
+            nn.Parameter(torch.randn(n, self.d_model))
+            for n in self.n_patches
+        ])
+        self.scale_embeddings = nn.Parameter(torch.randn(len(self.patch_scales), self.d_model))
+
+        self.transformer_encoder = nn.ModuleList([
+            _TSTEncoderLayer(self.d_model, self.n_heads, self.d_ff, self.dropout)
+            for _ in range(self.n_layers)
+        ])
+
+        self.prediction_head = nn.Linear(self.total_patch_tokens, self.pred_len)
+        self.dropout_layer = nn.Dropout(self.dropout)
+
+    def forward(self, x):
+        # x: (batch_size, seq_len, n_channels)
+        batch_size = x.shape[0]
+
+        x = self.revin(x, 'norm')
+        x = x.permute(0, 2, 1)                                      # (batch_size, n_channels, seq_len)
+        x = x.reshape(batch_size * self.n_channels, self.seq_len)   # (batch_size * n_channels, seq_len)
+
+        scale_reps = []
+        for idx, (scale, n_patches) in enumerate(zip(self.patch_scales, self.n_patches)):
+            patch_tokens = x.unfold(dimension=-1, size=scale, step=self.stride)
+            patch_tokens = self.patch_projections[idx](patch_tokens)
+            patch_tokens = patch_tokens + self.patch_pos_encodings[idx].unsqueeze(0)
+            patch_tokens = patch_tokens + self.scale_embeddings[idx].unsqueeze(0).unsqueeze(0)
+
+            for layer in self.transformer_encoder:
+                patch_tokens = layer(patch_tokens)
+
+            scale_reps.append(patch_tokens.reshape(batch_size * self.n_channels, n_patches * self.d_model))
+
+        x = torch.cat(scale_reps, dim=-1)
+        x = self.dropout_layer(x)
+        x = self.prediction_head(x)
+
+        x = x.reshape(batch_size, self.n_channels, self.pred_len)
+        x = x.permute(0, 2, 1)
+        x = self.revin(x, 'denorm')
+        return x
+
+
 def build_patchtst(config=config, cross_channel: bool = False):
-    if cross_channel:
+    if getattr(config, 'use_multiscale_patches', False):
+        return PatchTSTMultiScale(config)
+    if cross_channel or getattr(config, 'cross_channel_attention', False):
         return PatchTSTCrossChannel(config)
     return PatchTST(config)
 

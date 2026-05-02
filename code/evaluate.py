@@ -39,7 +39,7 @@ def load_and_evaluate(config, device=None):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     _, _, test_loader = get_dataloaders(config)
-    model = build_patchtst(config, cross_channel=config.cross_channel_attention).to(device)
+    model = build_patchtst(config).to(device)
 
     ckpt_path = os.path.join(config.checkpoint_path, "best_model.pt")
     model.load_state_dict(torch.load(ckpt_path, map_location=device))

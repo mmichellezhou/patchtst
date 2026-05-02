@@ -39,7 +39,9 @@ class Config:
     d_ff: int = 256
     dropout: float = 0.2
     instance_norm: bool = True
-    cross_channel_attention: bool = True
+    cross_channel_attention: bool = False
+    use_multiscale_patches: bool = True
+    patch_scales: tuple[int, ...] = field(default_factory=lambda: (8, 16, 32))
 
     # forecasting
     pred_len: int = 96

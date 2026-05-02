@@ -26,7 +26,7 @@ def train(config=config):
     os.makedirs(config.save_path, exist_ok=True)
 
     train_loader, val_loader, _ = get_dataloaders(config)
-    model = build_patchtst(config, cross_channel=config.cross_channel_attention).to(device)
+    model = build_patchtst(config).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
     criterion = nn.MSELoss()
 
