@@ -15,6 +15,56 @@ import torch.nn as nn
 from config import config
 
 
+<<<<<<< HEAD
+=======
+class RevIN(nn.Module):
+    """Reversible Instance Normalization (Kim et al., ICLR 2022)."""
+    def __init__(self, n_channels, eps=1e-5):
+        super().__init__()
+        self.eps = eps
+        self.gamma = nn.Parameter(torch.ones(n_channels))
+        self.beta  = nn.Parameter(torch.zeros(n_channels))
+
+    def forward(self, x, mode):
+        # x: (batch, seq_len, n_channels)
+        if mode == 'norm':
+            self.mean = x.mean(dim=1, keepdim=True)
+            self.std  = torch.sqrt(x.var(dim=1, keepdim=True, unbiased=False) + self.eps)
+            x = (x - self.mean) / self.std
+            x = x * self.gamma + self.beta
+        elif mode == 'denorm':
+            x = (x - self.beta) / self.gamma
+            x = x * self.std + self.mean
+        return x
+
+
+class _TSTEncoderLayer(nn.Module):
+    """Transformer encoder layer with BatchNorm, matching the paper."""
+    def __init__(self, d_model, n_heads, d_ff, dropout):
+        super().__init__()
+        self.attn = nn.MultiheadAttention(d_model, n_heads, dropout=dropout, batch_first=True)
+        self.ff = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(d_ff, d_model),
+        )
+        self.norm1 = nn.BatchNorm1d(d_model)
+        self.norm2 = nn.BatchNorm1d(d_model)
+        self.drop = nn.Dropout(dropout)
+
+    def forward(self, x):
+        # x: (B, L, D)
+        attn_out, _ = self.attn(x, x, x)
+        x = x + self.drop(attn_out)
+        B, L, D = x.shape
+        x = self.norm1(x.reshape(B * L, D)).reshape(B, L, D)
+        x = x + self.drop(self.ff(x))
+        x = self.norm2(x.reshape(B * L, D)).reshape(B, L, D)
+        return x
+
+
+>>>>>>> origin/main
 class PatchTST(nn.Module):
     def __init__(self, config=config):
         super().__init__()
@@ -35,12 +85,19 @@ class PatchTST(nn.Module):
         # number of input channels (features)
         self.n_channels = config.n_channels
 
+<<<<<<< HEAD
+=======
+        # reversible instance normalization
+        self.revin = RevIN(self.n_channels)
+
+>>>>>>> origin/main
         # patch projection: project each patch to d_model dimensions
         self.patch_projection = nn.Linear(self.patch_len, self.d_model)
 
         # positional encoding
         self.pos_encoding = nn.Parameter(torch.randn(self.n_patches, self.d_model))
 
+<<<<<<< HEAD
         # transformer encoder
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=self.d_model,
@@ -54,6 +111,13 @@ class PatchTST(nn.Module):
             encoder_layer,
             num_layers=self.n_layers
         )
+=======
+        # transformer encoder with BatchNorm (per paper)
+        self.transformer_encoder = nn.ModuleList([
+            _TSTEncoderLayer(self.d_model, self.n_heads, self.d_ff, self.dropout)
+            for _ in range(self.n_layers)
+        ])
+>>>>>>> origin/main
 
         # prediction head: flatten patches and project to pred_len
         self.prediction_head = nn.Linear(self.n_patches * self.d_model, self.pred_len)
@@ -64,6 +128,12 @@ class PatchTST(nn.Module):
         # x: (batch_size, seq_len, n_channels)
         batch_size = x.shape[0]
 
+<<<<<<< HEAD
+=======
+        # RevIN normalization
+        x = self.revin(x, 'norm')
+
+>>>>>>> origin/main
         # channel independence
         # (batch_size, seq_len, n_channels) -> (batch_size * n_channels, seq_len)
         x = x.permute(0, 2, 1)                                      # (batch_size, n_channels, seq_len)
@@ -81,7 +151,12 @@ class PatchTST(nn.Module):
 
         # transformer encoder
         # (batch_size * n_channels, n_patches, d_model) -> (batch_size * n_channels, n_patches, d_model)
+<<<<<<< HEAD
         x = self.transformer_encoder(x)
+=======
+        for layer in self.transformer_encoder:
+            x = layer(x)
+>>>>>>> origin/main
 
         # flatten + prediction head
         # (batch_size * n_channels, n_patches, d_model) -> (batch_size * n_channels, n_patches * d_model)
@@ -94,6 +169,7 @@ class PatchTST(nn.Module):
         x = x.reshape(batch_size, self.n_channels, self.pred_len)   # (batch_size, n_channels, pred_len)
         x = x.permute(0, 2, 1)                                      # (batch_size, pred_len, n_channels)
 
+<<<<<<< HEAD
         return x
 
 
@@ -170,13 +246,25 @@ def build_patchtst(config=config, cross_channel: bool = False):
     return PatchTST(config)
 
 
+=======
+        # RevIN denormalization
+        x = self.revin(x, 'denorm')
+
+        return x
+
+
+>>>>>>> origin/main
 if __name__ == "__main__":
     model = PatchTST(config)
     x = torch.randn(128, config.seq_len, config.n_channels)
     out = model(x)
     print(f"input shape:  {x.shape}")    # (128, 336, 7)
+<<<<<<< HEAD
     print(f"output shape: {out.shape}")  # (128, 96, 7)
 
     cc_model = PatchTSTCrossChannel(config)
     cc_out = cc_model(x)
     print(f"cross-channel output shape: {cc_out.shape}")
+=======
+    print(f"output shape: {out.shape}")  # (128, 96, 7)
+>>>>>>> origin/main
