@@ -97,9 +97,86 @@ class PatchTST(nn.Module):
         return x
 
 
+class PatchTSTCrossChannel(nn.Module):
+    """PatchTST with cross-channel attention across all feature channels."""
+
+    def __init__(self, config=config):
+        super().__init__()
+
+        self.seq_len = config.seq_len
+        self.pred_len = config.pred_len
+        self.patch_len = config.patch_len
+        self.stride = config.stride
+        self.d_model = config.d_model
+        self.n_heads = config.n_heads
+        self.n_layers = config.n_layers
+        self.d_ff = config.d_ff
+        self.dropout = config.dropout
+        self.n_channels = config.n_channels
+
+        self.n_patches = (self.seq_len - self.patch_len) // self.stride + 1
+        self.n_tokens = self.n_channels * self.n_patches
+
+        self.patch_projection = nn.Linear(self.patch_len, self.d_model)
+        self.patch_pos_encoding = nn.Parameter(torch.randn(self.n_patches, self.d_model))
+        self.channel_embedding = nn.Parameter(torch.randn(self.n_channels, self.d_model))
+        self.token_pos_encoding = nn.Parameter(torch.randn(self.n_tokens, self.d_model))
+
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=self.d_model,
+            nhead=self.n_heads,
+            dim_feedforward=self.d_ff,
+            dropout=self.dropout,
+            batch_first=True,
+            norm_first=False
+        )
+        self.transformer_encoder = nn.TransformerEncoder(
+            encoder_layer,
+            num_layers=self.n_layers
+        )
+
+        self.prediction_head = nn.Linear(self.n_patches * self.d_model, self.pred_len)
+        self.dropout_layer = nn.Dropout(self.dropout)
+
+    def forward(self, x):
+        # x: (batch_size, seq_len, n_channels)
+        batch_size = x.shape[0]
+
+        x = x.permute(0, 2, 1)                                      # (batch_size, n_channels, seq_len)
+        x = x.unfold(dimension=-1, size=self.patch_len, step=self.stride)   # (batch_size, n_channels, n_patches, patch_len)
+
+        x = self.patch_projection(x)                                 # (batch_size, n_channels, n_patches, d_model)
+        x = x + self.patch_pos_encoding.unsqueeze(0).unsqueeze(0)
+        x = x + self.channel_embedding.unsqueeze(1)
+
+        x = x.reshape(batch_size, self.n_tokens, self.d_model)
+        x = self.dropout_layer(x + self.token_pos_encoding.unsqueeze(0))
+
+        x = self.transformer_encoder(x)                              # (batch_size, n_tokens, d_model)
+
+        x = x.reshape(batch_size, self.n_channels, self.n_patches, self.d_model)
+        x = x.reshape(batch_size * self.n_channels, self.n_patches * self.d_model)
+        x = self.dropout_layer(x)
+        x = self.prediction_head(x)                                  # (batch_size * n_channels, pred_len)
+
+        x = x.reshape(batch_size, self.n_channels, self.pred_len)    # (batch_size, n_channels, pred_len)
+        x = x.permute(0, 2, 1)                                       # (batch_size, pred_len, n_channels)
+        return x
+
+
+def build_patchtst(config=config, cross_channel: bool = False):
+    if cross_channel:
+        return PatchTSTCrossChannel(config)
+    return PatchTST(config)
+
+
 if __name__ == "__main__":
     model = PatchTST(config)
     x = torch.randn(128, config.seq_len, config.n_channels)
     out = model(x)
     print(f"input shape:  {x.shape}")    # (128, 336, 7)
     print(f"output shape: {out.shape}")  # (128, 96, 7)
+
+    cc_model = PatchTSTCrossChannel(config)
+    cc_out = cc_model(x)
+    print(f"cross-channel output shape: {cc_out.shape}")

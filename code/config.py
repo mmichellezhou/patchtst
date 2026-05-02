@@ -36,6 +36,7 @@ class Config:
     d_ff: int = 256
     dropout: float = 0.2
     instance_norm: bool = True
+    cross_channel_attention: bool = False
 
     # forecasting
     pred_len: int = 96
