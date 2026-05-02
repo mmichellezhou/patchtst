@@ -32,14 +32,14 @@ def evaluate(model, test_loader, device):
 
 def load_and_evaluate(config, device=None):
     """Load the best checkpoint for config and evaluate on the test set."""
-    from patchtst import PatchTST
+    from patchtst import build_patchtst
     from dataset import get_dataloaders
 
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     _, _, test_loader = get_dataloaders(config)
-    model = PatchTST(config).to(device)
+    model = build_patchtst(config, cross_channel=config.cross_channel_attention).to(device)
 
     ckpt_path = os.path.join(config.checkpoint_path, "best_model.pt")
     model.load_state_dict(torch.load(ckpt_path, map_location=device))

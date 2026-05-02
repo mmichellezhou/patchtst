@@ -14,7 +14,7 @@ import torch
 import torch.nn as nn
 from config import config
 from dataset import get_dataloaders
-from patchtst import PatchTST
+from patchtst import build_patchtst
 
 
 def train(config=config):
@@ -26,7 +26,7 @@ def train(config=config):
     os.makedirs(config.save_path, exist_ok=True)
 
     train_loader, val_loader, _ = get_dataloaders(config)
-    model = PatchTST(config).to(device)
+    model = build_patchtst(config, cross_channel=config.cross_channel_attention).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
     criterion = nn.MSELoss()
 
