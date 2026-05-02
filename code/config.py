@@ -19,7 +19,7 @@ _ROOT = os.path.dirname(_HERE)                        # .../patchtst
 @dataclass
 class Config:
     # dataset
-    dataset_name: str = "ETTh1"
+    dataset_name: str = "electricity"
     n_channels: int = 7
     target: str = "OT"
     features: str = "M"
@@ -40,7 +40,7 @@ class Config:
     dropout: float = 0.2
     instance_norm: bool = True
     cross_channel_attention: bool = False
-    use_multiscale_patches: bool = True
+    use_multiscale_patches: bool = False
     patch_scales: tuple[int, ...] = field(default_factory=lambda: (8, 16, 32))
 
     # forecasting
@@ -58,7 +58,14 @@ class Config:
 
     def __post_init__(self):
         # auto-derive data path from dataset name
-        self.data_path = os.path.join(_ROOT, "data", "ETDataset", "ETT-small", f"{self.dataset_name}.csv")
+        dataset_name_lower = self.dataset_name.lower()
+        if dataset_name_lower == "electricity":
+            self.data_path = os.path.join(_ROOT, "data", "electricity.csv")
+        elif self.dataset_name in ["ETTh1", "ETTh2", "ETTm1", "ETTm2"]:
+            self.data_path = os.path.join(_ROOT, "data", "ETDataset", "ETT-small", f"{self.dataset_name}.csv")
+        else:
+            self.data_path = os.path.join(_ROOT, "data", f"{self.dataset_name}.csv")
+
         self.save_path = os.path.join(_ROOT, "results")
         self.checkpoint_path = os.path.join(_ROOT, "results", "checkpoints")
 

@@ -30,9 +30,15 @@ class ETTDataset(Dataset):
         self.seq_len = config.seq_len
         self.pred_len = config.pred_len
 
-        # load and drop date column
+        # load and drop date column if present
         df = pd.read_csv(data_path)
-        df = df.drop(columns=["date"])
+        if "date" in df.columns:
+            df = df.drop(columns=["date"])
+
+        # if using electricity and n_channels is still the default ETT value, infer channel count
+        if config.dataset_name.lower() == "electricity" and config.n_channels == 7:
+            config.n_channels = df.shape[1]
+
         data = df.values.astype(np.float32)
 
         # use fixed splits for ETT datasets to match paper evaluation protocol
