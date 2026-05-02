@@ -7,9 +7,6 @@ Contains:
 - MSE and MAE metric computation
 - Plot generation (forecast vs. actual, loss curves)
 - Result saving to results/figures/ and results/tables/
-<<<<<<< HEAD
-"""
-=======
 """
 
 import os
@@ -60,4 +57,3 @@ def plot_forecast(x_true, y_true, y_pred, channel=0, title="Forecast vs. Actual"
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         fig.savefig(save_path, dpi=150)
     return fig
->>>>>>> origin/main
