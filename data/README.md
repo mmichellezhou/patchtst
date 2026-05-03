@@ -14,5 +14,20 @@ The following files are used in our experiments:
 
 Download electricity dataset:
 ```bash
-curl -L https://github.com/thuml/Autoformer/raw/main/data/electricity/electricity.csv -o electricity.csv
+curl -L https://huggingface.co/datasets/thuml/Time-Series-Library/resolve/main/electricity/electricity.csv -o electricity.csv
+```
+
+Download weather dataset:
+```bash
+curl -L https://huggingface.co/datasets/thuml/Time-Series-Library/resolve/main/weather/weather.csv -o weather.csv
+```
+
+Download traffic dataset:
+```bash
+curl -L https://huggingface.co/datasets/thuml/Time-Series-Library/resolve/main/traffic/traffic.csv -o traffic.csv
+```
+
+Download ILI (national illness) dataset:
+```bash
+curl -L https://huggingface.co/datasets/thuml/Time-Series-Library/resolve/main/illness/national_illness.csv -o national_illness.csv
 ```

@@ -35,10 +35,6 @@ class ETTDataset(Dataset):
         if "date" in df.columns:
             df = df.drop(columns=["date"])
 
-        # if using electricity and n_channels is still the default ETT value, infer channel count
-        if config.dataset_name.lower() == "electricity" and config.n_channels == 7:
-            config.n_channels = df.shape[1]
-
         data = df.values.astype(np.float32)
 
         # use fixed splits for ETT datasets to match paper evaluation protocol
