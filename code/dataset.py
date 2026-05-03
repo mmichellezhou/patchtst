@@ -37,24 +37,27 @@ class ETTDataset(Dataset):
 
         data = df.values.astype(np.float32)
 
-        # use fixed splits for ETT datasets to match paper evaluation protocol
+        # split sizes: fixed for ETT (paper protocol), 70/10/20 ratios for everything else
         dataset_name = config.dataset_name
         if dataset_name in _ETT_SPLITS:
             n_train, n_val, n_test = _ETT_SPLITS[dataset_name]
-            borders = {
-                "train": (0, n_train),
-                "val":   (n_train, n_train + n_val),
-                "test":  (n_train + n_val, n_train + n_val + n_test),
-            }
+            total = n_train + n_val + n_test     # ETT may have unused rows past this
         else:
             n = len(data)
-            train_end = int(n * config.train_ratio)
-            val_end   = int(n * (config.train_ratio + config.val_ratio))
-            borders = {
-                "train": (0, train_end),
-                "val":   (train_end, val_end),
-                "test":  (val_end, n),
-            }
+            n_train = int(n * config.train_ratio)
+            n_test  = int(n * config.test_ratio)
+            n_val   = n - n_train - n_test
+            total = n
+
+        # Autoformer/PatchTST border convention: val and test are padded by seq_len at the
+        # start so a sliding window can begin at the first true val/test prediction step.
+        # Without this padding, ILI's tiny val (~97 rows) is shorter than seq_len=104 and
+        # __len__ goes negative.
+        borders = {
+            "train": (0,                              n_train),
+            "val":   (n_train  - self.seq_len,        n_train + n_val),
+            "test":  (n_train + n_val - self.seq_len, total),
+        }
 
         # global normalization using training set statistics (no data leakage)
         train_start, train_end = borders["train"]
