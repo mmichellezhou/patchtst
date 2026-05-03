@@ -30,6 +30,9 @@ def train(config=config):
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
     criterion = nn.MSELoss()
 
+    use_amp = device.type == "cuda"
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
+
     best_val_loss = float("inf")
     train_losses, val_losses = [], []
     patience, patience_counter = 20, 0
@@ -43,12 +46,15 @@ def train(config=config):
         model.train()
         total_train_loss = 0.0
         for x, y in train_loader:
-            x, y = x.to(device), y.to(device)
+            x = x.to(device, non_blocking=True)
+            y = y.to(device, non_blocking=True)
             optimizer.zero_grad()
-            pred = model(x)
-            loss = criterion(pred, y)
-            loss.backward()
-            optimizer.step()
+            with torch.amp.autocast("cuda", enabled=use_amp):
+                pred = model(x)
+                loss = criterion(pred, y)
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
             total_train_loss += loss.item()
         avg_train_loss = total_train_loss / len(train_loader)
         train_losses.append(avg_train_loss)
@@ -56,9 +62,10 @@ def train(config=config):
         # validate
         model.eval()
         total_val_loss = 0.0
-        with torch.no_grad():
+        with torch.no_grad(), torch.amp.autocast("cuda", enabled=use_amp):
             for x, y in val_loader:
-                x, y = x.to(device), y.to(device)
+                x = x.to(device, non_blocking=True)
+                y = y.to(device, non_blocking=True)
                 pred = model(x)
                 loss = criterion(pred, y)
                 total_val_loss += loss.item()

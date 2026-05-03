@@ -83,9 +83,10 @@ def get_dataloaders(config=config):
     val_dataset   = ETTDataset(config.data_path, split="val",   config=config)
     test_dataset  = ETTDataset(config.data_path, split="test",  config=config)
 
-    train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
-    val_loader   = DataLoader(val_dataset,   batch_size=config.batch_size, shuffle=False)
-    test_loader  = DataLoader(test_dataset,  batch_size=config.batch_size, shuffle=False)
+    loader_kwargs = dict(num_workers=4, pin_memory=True, persistent_workers=True)
+    train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True,  **loader_kwargs)
+    val_loader   = DataLoader(val_dataset,   batch_size=config.batch_size, shuffle=False, **loader_kwargs)
+    test_loader  = DataLoader(test_dataset,  batch_size=config.batch_size, shuffle=False, **loader_kwargs)
 
     return train_loader, val_loader, test_loader
 
