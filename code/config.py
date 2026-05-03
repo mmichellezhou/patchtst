@@ -25,8 +25,8 @@ _DATASET_SPECS = {
     "ETTm1":       {"n_channels": 7,   "d_model": 128, "n_heads": 16, "d_ff": 256, "dropout": 0.2, "batch_size": 128, "learning_rate": 1e-4,  "seq_len": 336},
     "ETTm2":       {"n_channels": 7,   "d_model": 128, "n_heads": 16, "d_ff": 256, "dropout": 0.2, "batch_size": 128, "learning_rate": 1e-4,  "seq_len": 336},
     "weather":     {"n_channels": 21,  "d_model": 128, "n_heads": 16, "d_ff": 256, "dropout": 0.2, "batch_size": 128, "learning_rate": 1e-4,  "seq_len": 336},
-    "electricity": {"n_channels": 321, "d_model": 128, "n_heads": 16, "d_ff": 256, "dropout": 0.2, "batch_size": 16,  "learning_rate": 1e-4,  "seq_len": 336},
-    "traffic":     {"n_channels": 862, "d_model": 128, "n_heads": 16, "d_ff": 256, "dropout": 0.2, "batch_size": 8,   "learning_rate": 1e-4,  "seq_len": 336},
+    "electricity": {"n_channels": 321, "d_model": 128, "n_heads": 16, "d_ff": 256, "dropout": 0.2, "batch_size": 32,  "learning_rate": 1e-4,  "seq_len": 336},
+    "traffic":     {"n_channels": 862, "d_model": 128, "n_heads": 16, "d_ff": 256, "dropout": 0.2, "batch_size": 16,  "learning_rate": 1e-4,  "seq_len": 336},
     # ILI uses different patch_len/stride and a much shorter look-back
     "ili":         {"n_channels": 7,   "d_model": 16,  "n_heads": 4,  "d_ff": 128, "dropout": 0.3, "batch_size": 16,  "learning_rate": 2.5e-3, "seq_len": 104, "patch_len": 24, "stride": 2},
 }
