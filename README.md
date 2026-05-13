@@ -23,6 +23,7 @@ It uses the ETT datasets (ETTh1/ETTh2/ETTm1/ETTm2/weather/illness), PyTorch trai
 3. Run cells in `results.ipynb`
 A GPU is recommended for training, but CPU execution is possible for small-scale tests.
 The repo produces PatchTST forecasts and stores best model checkpoints under `results/checkpoints/best_model.pt`.
+Visualizations are stored under `results/figures`.
 
 ## 6. Results/Insights
 The repo closely reproduces the paper's forecasting results with a 1-3% deviation in MSE and MAE. Using the PatchTSTCrossChannel and PatchTSTMultiScale models also produce similar results to the paper, though they are consistently slightly worse (this does depend on the patches chosen for PatchTSTMultiScale).
