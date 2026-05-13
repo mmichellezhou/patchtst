@@ -35,4 +35,4 @@ Nie, S., Wang, Y., Lin, H., Wang, Y., & Liu, C. (2023). "A Time Series is Worth 
 We used Claude to create the skeleton template for our codebase and repository.
 
 ## 9. Acknowledgements
-This work was completed as a coursework-style reproduction project for Cornell's CS4782: Deep Learning, with reference to the original PatchTST implementation.
+This work was completed as a class final project for Cornell's CS4782: Deep Learning, with reference to the original PatchTST implementation.
