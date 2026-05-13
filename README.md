@@ -31,8 +31,8 @@ The repo closely reproduces the paper's forecasting results with a 1-3% deviatio
 Our reimplementation reinforces the paper's central claim that patching and channel independence can create a more robust transformer model to predict time series.
 
 ## 8. References
-Nie, S., Wang, Y., Lin, H., Wang, Y., & Liu, C. (2023). "A Time Series is Worth 64 Words: Long-Term Forecasting with Transformers." ICLR 2023.
-We used Claude to create the skeleton template for our codebase and repository.
+- Nie, S., Wang, Y., Lin, H., Wang, Y., & Liu, C. (2023). "A Time Series is Worth 64 Words: Long-Term Forecasting with Transformers." ICLR 2023.
+- We used Claude to create the skeleton template for our codebase and repository.
 
 ## 9. Acknowledgements
 This work was completed as a class final project for Cornell's CS4782: Deep Learning, with reference to the original PatchTST implementation.
