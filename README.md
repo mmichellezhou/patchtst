@@ -1,5 +1,7 @@
 # Reproducing PatchTST
 
+<img width="1204" height="802" alt="patchtst" src="https://github.com/user-attachments/assets/49434ada-32bb-4b02-bcef-44b7d4f5ee99" />
+
 A reimplementation and evaluation of **PatchTST**, introduced in *A Time Series is Worth 64 Words: Long-Term Forecasting with Transformers* by Nie et al. (ICLR 2023).
 
 ## Overview
