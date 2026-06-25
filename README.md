@@ -15,10 +15,8 @@ PatchTST addresses these challenges by dividing each time-series channel into pa
 We focused on reproducing the **PatchTST/42** long-term forecasting results reported in Table 3 of the original paper. These experiments evaluate forecasting performance across electricity, illness, and weather datasets using multiple prediction horizons.
 
 This result supports the paper’s central claim that patch-based tokenization and channel independence can outperform earlier Transformer-based forecasting models.
- 
- <img width="154" height="151" alt="image" src="https://github.com/user-attachments/assets/2e6d06b4-ea9b-476e-a526-0d4aa1802706" />
 
-*Figure 1. Table 3 results from the original paper.*
+<p align="center"> <img width="154" height="151" alt="Original PatchTST results" src="https://github.com/user-attachments/assets/2e6d06b4-ea9b-476e-a526-0d4aa1802706" /> <br /> <em>Figure 1. Table 3 results from the original paper.</em> </p>
 
 
 ## Methodology
@@ -76,22 +74,16 @@ The input is processed in parallel using patch sizes of 8, 16, and 32. The resul
 Our implementation reproduced the original paper’s forecasting results with MSE and MAE values generally within **1–3%** of the reported metrics. Small differences may result from random seeds and minor variations in hyperparameters or implementation details.
 
 The reproduction also preserved the qualitative patterns reported in the paper, including the greater difficulty of forecasting the ETTh datasets compared with the ETTm datasets.
-<img width="270" height="158" alt="image" src="https://github.com/user-attachments/assets/f3e51813-d84f-4d32-9d47-f17ac48087e1" />
+<p align="center"> <img width="270" height="158" alt="Reimplementation results comparison" src="https://github.com/user-attachments/assets/f3e51813-d84f-4d32-9d47-f17ac48087e1" /> <br /> <em>Figure 2. MSE and MAE comparison between our implementation and the original paper.</em> </p>
 
 
-*Figure 2. MSE and MAE comparison between our implementation and the original paper.*
-<img width="179" height="162" alt="image" src="https://github.com/user-attachments/assets/bc9691d8-999c-4971-a333-0f7aad03cab5" />
+<p align="center"> <img width="179" height="162" alt="Multi-scale patching comparison" src="https://github.com/user-attachments/assets/bc9691d8-999c-4971-a333-0f7aad03cab5" /> <br /> <em>Figure 3. MSE comparison between multi-scale patching and standard PatchTST.</em> </p>
 
 
-*Figure 3. MSE comparison between multi-scale patching and standard PatchTST.*
-<img width="175" height="153" alt="image" src="https://github.com/user-attachments/assets/8cad7273-e474-4713-b266-686e63c06ef2" />
 
+<p align="center"> <img width="175" height="153" alt="Cross-channel attention comparison" src="https://github.com/user-attachments/assets/8cad7273-e474-4713-b266-686e63c06ef2" /> <br /> <em>Figure 4. MSE comparison between cross-channel attention and standard PatchTST.</em> </p>
 
-*Figure 4. MSE comparison between cross-channel attention and standard PatchTST.*
-<img width="396" height="162" alt="image" src="https://github.com/user-attachments/assets/04d9dd6b-dcbd-4079-98ba-a7d53fad1555" />
-
-
-*Figure 5. Forecast predictions across the six evaluated datasets.*
+<p align="center"> <img width="396" height="162" alt="PatchTST forecasting predictions" src="https://github.com/user-attachments/assets/04d9dd6b-dcbd-4079-98ba-a7d53fad1555" /> <br /> <em>Figure 5. Forecast predictions across the six evaluated datasets.</em> </p>
 
 Multi-scale patching captured finer temporal changes but performed slightly worse overall. Cross-channel attention also underperformed the standard model, suggesting that combining channels may introduce more noise and spurious correlations than useful information.
 
