@@ -1,4 +1,6 @@
 # PatchTST Reimplementation
+<img width="1100" height="732" alt="Screenshot 2026-06-25 at 11 58 35 AM" src="https://github.com/user-attachments/assets/84705ce2-8ceb-4db3-9df0-c822a297a7a0" />
+
 
 ## 1. Introduction
 This repo is a reimplementation of the PatchTST time-series forecasting model from "A Time Series is Worth 64 Words: Long-Term Forecasting with Transformers" (Nie et al., ICLR 2023). The paper introduces PatchTST, a time series transformer that can outperform other transformer-based models through patching and channel independence.
